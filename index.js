@@ -5,11 +5,8 @@ const express = require("express");
 const cors = require("cors");
 
 const swaggerUi = require("swagger-ui-express");
-const swaggerJSDoc = require("swagger-jsdoc");
 
-const swaggerConfig = require("./config/swagger-config");
-
-const swaggerSpec = swaggerJSDoc(swaggerConfig);
+const openapiSpecs = require("./config/openapi-specs");
 
 const app = express();
 
@@ -35,7 +32,7 @@ const metroRoutes = require("./routes/metro-routes");
 app.use("/metro", metroRoutes);
 app.use("/health", healthRoutes);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecs));
 
 app.use(express.static('public'));
 

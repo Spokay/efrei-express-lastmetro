@@ -1,0 +1,104 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LastMetro API",
+    "version": "1.0.0",
+    "description": "API pour savoir s'il faut courir pour attraper le dernier métro à Paris"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "API status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metro/next-metro": {
+      "get": {
+        "summary": "Prochains passages",
+        "parameters": [
+          {
+            "name": "station",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "Châtelet"
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 5, "default": 1 },
+            "example": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Informations métro",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "single": {
+                    "summary": "Un seul passage",
+                    "value": {
+                      "station": "Châtelet",
+                      "line": "M7",
+                      "headwayMin": 3,
+                      "nextArrival": "14:25",
+                      "isLast": false,
+                      "tz": "Europe/Paris"
+                    }
+                  },
+                  "multiple": {
+                    "summary": "Plusieurs passages",
+                    "value": {
+                      "station": "Châtelet",
+                      "line": "M7",
+                      "arrivals": [
+                        { "nextArrival": "14:25", "isLast": false, "headwayMin": 3, "tz": "Europe/Paris" },
+                        { "nextArrival": "14:28", "isLast": false, "headwayMin": 3, "tz": "Europe/Paris" }
+                      ],
+                      "tz": "Europe/Paris"
+                    }
+                  },
+                  "closed": {
+                    "summary": "Service fermé",
+                    "value": { "service": "closed", "tz": "Europe/Paris" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paramètres manquants",
+            "content": {
+              "application/json": {
+                "example": { "error": "missing station" }
+              }
+            }
+          },
+          "404": {
+            "description": "Station inconnue",
+            "content": {
+              "application/json": {
+                "example": { "error": "station not found", "suggestion": ["Châtelet"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
