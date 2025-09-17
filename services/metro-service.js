@@ -1,13 +1,19 @@
-const { TIMEZONE, SERVICE_HOURS, STATIONS_NAMES, HEADWAY_MIN, PARSED_LAST_WINDOW_START, PARSED_SERVICE_END } = require("../utils/constants");
-const {MetroStation} = require("../database/models");
+const { TIMEZONE, SERVICE_HOURS, STATIONS_NAMES, HEADWAY_MIN, PARSED_LAST_WINDOW_START, PARSED_SERVICE_END, getMetroConfig } = require("../utils/constants");
+const {MetroStation, Config, MetroLine} = require("../database/models");
 const { Op } = require('sequelize');
 
+const serviceClosedResponse = { service: 'closed', tz: TIMEZONE };
+
 const getNextArrival = (currentTime = new Date(), headwayMin = HEADWAY_MIN) => {
+    if (headwayMin <= 0) {
+        return serviceClosedResponse;
+    }
+
     const currentHour = currentTime.getHours();
     const currentMinute = currentTime.getMinutes();
 
     if (!isServiceOpen(currentHour, currentMinute)) {
-        return { service: 'closed', tz: TIMEZONE };
+        return serviceClosedResponse;
     }
 
     const nextMetroTime = new Date(currentTime.getTime() + headwayMin * 60 * 1000);
@@ -15,7 +21,7 @@ const getNextArrival = (currentTime = new Date(), headwayMin = HEADWAY_MIN) => {
     const nextMinute = nextMetroTime.getMinutes();
 
     if (isAfterServiceEnd(nextHour, nextMinute)) {
-        return { service: 'closed', tz: TIMEZONE };
+        return serviceClosedResponse;
     }
 
     return {
@@ -31,7 +37,7 @@ const getNextArrivals = (n, currentTime = new Date(), headwayMin = HEADWAY_MIN) 
     const currentMinute = currentTime.getMinutes();
 
     if (!isServiceOpen(currentHour, currentMinute)) {
-        return { service: 'closed', tz: TIMEZONE };
+        return serviceClosedResponse;
     }
 
     const arrivals = [];
@@ -60,7 +66,6 @@ const getNextArrivals = (n, currentTime = new Date(), headwayMin = HEADWAY_MIN) 
 };
 
 const getStationByName = async (name) => {
-    const { MetroLine } = require("../database/models");
     try {
         return await MetroStation.findOne({
             where: {name: name},
@@ -82,12 +87,10 @@ const getSuggestions = async (input) => {
         return [];
     }
 
-    const sanitizedInput = removeAccents(input.trim().toLowerCase()).replace(/\s+/g, '');
+    const sanitizedInput = sanitizeInputStation(input);
 
-    console.log(`Searching for stations matching: ${sanitizedInput}`);
     try {
         const matchingStations = await getMatchingStation(sanitizedInput);
-        console.log(`Found ${matchingStations.length} matching stations`);
         return matchingStations.map(station => station.name);
     } catch (error) {
         console.error('Error fetching station suggestions:', error);
@@ -105,6 +108,12 @@ const getMatchingStation = async (input) => {
         },
         limit: 10
     });
+}
+
+const sanitizeInputStation = (str) => {
+    const lowerStr = str.toLowerCase();
+    const withoutAccents = removeAccents(lowerStr);
+    return withoutAccents.trim().replace(/\s+/g, '')
 }
 
 const removeAccents = (str) => {
@@ -148,4 +157,33 @@ const isAfterServiceEnd = (hour, minute) => {
            (hour === SERVICE_HOURS.START_HOUR && minute < SERVICE_HOURS.START_MINUTE);
 };
 
-module.exports = { getNextArrival, getNextArrivals, getStationByName, getSuggestions};
+const getLastMetro = async (stationName, station) => {
+    try {
+        const config = await getMetroConfig();
+
+        if (!config) {
+            return { error: 'internal_error' };
+        }
+
+        const { defaults, lastMetroTimes } = config;
+
+        const stationKey = Object.keys(lastMetroTimes).find(
+            key => key.toLowerCase() === station.name.toLowerCase()
+        );
+
+        if (!stationKey) {
+            return { error: 'internal_error', station: stationName };
+        }
+
+        return {
+            lastMetro: lastMetroTimes[stationKey],
+            tz: defaults.tz
+        };
+
+    } catch (error) {
+        console.error('Error in getLastMetro:', error);
+        return { error: 'internal_error' };
+    }
+};
+
+module.exports = { getNextArrival, getNextArrivals, getStationByName, getSuggestions, getLastMetro};

@@ -35,11 +35,24 @@ const MetroStation = sequelize.define('MetroStation', {
     }
 });
 
+const Config = sequelize.define('Config', {
+    key: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false
+    },
+    value: {
+        type: DataTypes.TEXT,
+        allowNull: false
+    }
+});
+
 MetroStation.belongsTo(MetroLine, { foreignKey: 'lineId', as: 'line' });
 MetroLine.hasMany(MetroStation, { foreignKey: 'lineId' });
 
 
 module.exports = {
     MetroLine,
-    MetroStation
+    MetroStation,
+    Config
 }

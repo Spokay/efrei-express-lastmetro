@@ -99,6 +99,78 @@
           }
         }
       }
+    },
+    "/metro/last-metro": {
+      "get": {
+        "summary": "Dernier métro",
+        "parameters": [
+          {
+            "name": "station",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "Châtelet"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Informations dernier métro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "station": { "type": "string", "example": "Châtelet" },
+                    "lastMetro": { "type": "string", "example": "01:15" },
+                    "line": { "type": "string", "example": "M1" },
+                    "tz": { "type": "string", "example": "Europe/Paris" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paramètre station manquant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "missing station" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Station inconnue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "station not found" },
+                    "station": { "type": "string", "example": "NonExistent" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur interne",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "internal server error" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

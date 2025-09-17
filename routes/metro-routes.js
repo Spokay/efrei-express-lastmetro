@@ -1,10 +1,10 @@
-const {getNextArrival, getNextArrivals, getStationByName, getSuggestions} = require("../services/metro-service");
+const {getNextArrival, getNextArrivals, getStationByName, getSuggestions, getLastMetro} = require("../services/metro-service");
 
 const router = require('express').Router();
 
 router.get('/next-metro', async (req, res) => {
     const stationInput = req.query.station;
-    const n = parseInt(req.query.n) || 1;
+    const n = req.query.n ? parseInt(req.query.n) : 1;
 
     if (!stationInput) {
         return res.status(400).json({error: 'missing station'});
@@ -15,7 +15,6 @@ router.get('/next-metro', async (req, res) => {
     }
 
     const metroStation = await getStationByName(stationInput);
-    console.log(`Requested station: ${stationInput}, Found: ${metroStation}`);
 
     if (!metroStation) {
         return res.status(404).json({error: 'station not found', suggestion: await getSuggestions(stationInput)});
@@ -25,7 +24,6 @@ router.get('/next-metro', async (req, res) => {
         const metroInfo = getNextArrival();
 
         if (metroInfo.service === 'closed') {
-            console.log('Service is closed');
             return res.status(200).json(metroInfo);
         }
 
@@ -53,6 +51,28 @@ router.get('/next-metro', async (req, res) => {
 
         return res.status(200).json(result);
     }
+});
+
+router.get('/last-metro', async (req, res) => {
+    const stationInput = req.query.station;
+
+    if (!stationInput) {
+        return res.status(400).json({error: 'missing station'});
+    }
+
+    const metroStation = await getStationByName(stationInput);
+
+    if (!metroStation) {
+        return res.status(404).json({error: 'station not found', suggestion: await getSuggestions(stationInput)});
+    }
+
+    const result = await getLastMetro(stationInput, metroStation);
+
+    if (result.error) {
+        return res.status(500).json({error: 'internal error'});
+    }
+
+    return res.status(200).json({station: metroStation, lastMetro: result.lastMetro, tz: result.tz});
 });
 
 module.exports = router;

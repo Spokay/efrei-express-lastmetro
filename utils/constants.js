@@ -19,6 +19,33 @@ const parseTimeString = (timeStr) => {
 const PARSED_LAST_WINDOW_START = parseTimeString(LAST_WINDOW_START);
 const PARSED_SERVICE_END = parseTimeString(SERVICE_END);
 
+const CONFIG_KEYS = {
+    METRO_DEFAULTS: 'metro.defaults',
+    METRO_LAST: 'metro.last'
+};
+
+const getMetroConfig = async () => {
+    try {
+        const { Config } = require("../database/models");
+        const [defaultsConfig, lastMetroConfig] = await Promise.all([
+            Config.findByPk(CONFIG_KEYS.METRO_DEFAULTS),
+            Config.findByPk(CONFIG_KEYS.METRO_LAST)
+        ]);
+
+        if (!defaultsConfig || !lastMetroConfig) {
+            return { error: 'config_missing' };
+        }
+
+        return {
+            defaults: JSON.parse(defaultsConfig.value),
+            lastMetroTimes: JSON.parse(lastMetroConfig.value)
+        };
+    } catch (error) {
+        console.error('Error fetching metro config:', error);
+        return null;
+    }
+};
+
 const STATIONS_NAMES = [
     "Châtelet",
     "Gare de Lyon",
@@ -74,5 +101,7 @@ module.exports = {
     SERVICE_END,
     STATIONS_NAMES,
     PARSED_LAST_WINDOW_START,
-    PARSED_SERVICE_END
+    PARSED_SERVICE_END,
+    CONFIG_KEYS,
+    getMetroConfig
 };

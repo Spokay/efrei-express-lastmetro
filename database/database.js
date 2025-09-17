@@ -3,8 +3,6 @@ const { STATIONS_NAMES } = require('../utils/constants');
 
 const dbUri = process.env.DATABASE_URL || 'sqlite::memory:';
 
-console.log(`Connecting to database at ${dbUri}`);
-
 const sequelize = new Sequelize(dbUri, {
     logging: console.log,
     dialect: 'postgres'
@@ -14,7 +12,7 @@ const initDb = async () => {
     await sequelize.sync({ logging: true });
 }
 
-const seedDb = async (MetroLine, MetroStation) => {
+const seedDb = async (MetroLine, MetroStation, Config) => {
     const existingLines = await MetroLine.count();
     if (existingLines > 0) {
         return;
@@ -32,6 +30,29 @@ const seedDb = async (MetroLine, MetroStation) => {
         metroStations.push({name: STATIONS_NAMES[i], lineId: (i % 15) + 1});
     }
     await MetroStation.bulkCreate(metroStations);
+
+    const configData = [];
+
+    const { CONFIG_KEYS } = require('../utils/constants');
+
+    const defaults = {
+        key: CONFIG_KEYS.METRO_DEFAULTS,
+        value: JSON.stringify({ line: 'M1', tz: 'Europe/Paris' })
+    }
+
+    configData.push(defaults);
+
+    const lastMetroTimes = {};
+    STATIONS_NAMES.forEach(stationName => {
+        lastMetroTimes[stationName] = '01:15';
+    });
+
+    configData.push({
+        key: CONFIG_KEYS.METRO_LAST,
+        value: JSON.stringify(lastMetroTimes)
+    });
+
+    await Config.bulkCreate(configData);
 
     console.log("Database seeded");
 }
