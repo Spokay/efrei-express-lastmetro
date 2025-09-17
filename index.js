@@ -1,5 +1,7 @@
 "use strict"
 
+require('dotenv').config();
+
 const express = require("express");
 
 const cors = require("cors");
@@ -9,6 +11,20 @@ const swaggerUi = require("swagger-ui-express");
 const openapiSpecs = require("./config/openapi-specs");
 
 const app = express();
+
+const { initDb, seedDb } = require("./database/database");
+const { MetroLine, MetroStation } = require("./database/models");
+
+initDb().then(() => {
+    console.log("Database initialized");
+    seedDb(MetroLine, MetroStation).then(() => {
+        console.log("Database seeded");
+    }).catch(err => {
+        console.error("Failed to seed database:", err);
+    });
+}).catch(err => {
+    console.error("Failed to initialize database:", err);
+});
 
 app.use(express.json());
 app.use(cors());

@@ -1,34 +1,36 @@
-const {getNextArrival, getNextArrivals, getSuggestion} = require("../services/metro-service");
+const {getNextArrival, getNextArrivals, getStationByName, getSuggestions} = require("../services/metro-service");
 
 const router = require('express').Router();
-const { STATIONS_NAMES } = require("../utils/constants");
 
-router.get('/next-metro', (req, res) => {
-    const station = req.query.station;
+router.get('/next-metro', async (req, res) => {
+    const stationInput = req.query.station;
     const n = parseInt(req.query.n) || 1;
 
-    if (!station) {
-        return res.status(400).json({ error: 'missing station' });
+    if (!stationInput) {
+        return res.status(400).json({error: 'missing station'});
     }
 
     if (n < 1 || n > 5) {
-        return res.status(400).json({ error: 'n must be between 1 and 5' });
+        return res.status(400).json({error: 'n must be between 1 and 5'});
     }
 
-    if (!STATIONS_NAMES.includes(station)) {
-        return res.status(404).json({ error: 'station not found', suggestion: getSuggestion(station) });
+    const metroStation = await getStationByName(stationInput);
+    console.log(`Requested station: ${stationInput}, Found: ${metroStation}`);
+
+    if (!metroStation) {
+        return res.status(404).json({error: 'station not found', suggestion: await getSuggestions(stationInput)});
     }
 
     if (n === 1) {
         const metroInfo = getNextArrival();
 
         if (metroInfo.service === 'closed') {
+            console.log('Service is closed');
             return res.status(200).json(metroInfo);
         }
 
         const result = {
-            station: station,
-            line: "M7",
+            station: metroStation.toJSON(),
             headwayMin: metroInfo.headwayMin,
             nextArrival: metroInfo.nextArrival,
             isLast: metroInfo.isLast,
@@ -44,8 +46,7 @@ router.get('/next-metro', (req, res) => {
         }
 
         const result = {
-            station: station,
-            line: "M7",
+            station: metroStation.toJSON(),
             arrivals: metroInfoList,
             tz: metroInfoList[0].tz
         };

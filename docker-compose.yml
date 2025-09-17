@@ -2,8 +2,32 @@
 services:
   lastmetro-api:
     build: .
+    container_name: lastmetro-api
     ports:
       - "3000:3000"
     environment:
       - PORT=3000
       - TIMEZONE=Europe/Paris
+    networks:
+      - lastmetro-network
+  postgres-lastmetro:
+    image: postgres:9.2-alpine
+    container_name: postgres-lastmetro
+    environment:
+        - POSTGRES_USER=lastmetro
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        - POSTGRES_DB=lastmetro
+    ports:
+        - "5432:5432"
+    volumes:
+        - postgres-lastmetro-data:/var/lib/postgresql/data
+    networks:
+      - lastmetro-network
+
+networks:
+  lastmetro-network:
+    driver: bridge
+
+volumes:
+  postgres-lastmetro-data:
+      driver: local

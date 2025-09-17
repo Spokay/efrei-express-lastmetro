@@ -1,4 +1,6 @@
 const { TIMEZONE, SERVICE_HOURS, STATIONS_NAMES, HEADWAY_MIN, PARSED_LAST_WINDOW_START, PARSED_SERVICE_END } = require("../utils/constants");
+const {MetroStation} = require("../database/models");
+const { Op } = require('sequelize');
 
 const getNextArrival = (currentTime = new Date(), headwayMin = HEADWAY_MIN) => {
     const currentHour = currentTime.getHours();
@@ -57,13 +59,52 @@ const getNextArrivals = (n, currentTime = new Date(), headwayMin = HEADWAY_MIN) 
     return arrivals;
 };
 
-const getSuggestion = (input) => {
-    return STATIONS_NAMES.filter(station => {
-        const sanitizedInput = removeAccents(input.trim().toLowerCase());
-        const sanitizedStation = removeAccents(station.trim().toLowerCase())
-        // remove accents for comparison
-        return sanitizedStation.includes(sanitizedInput);
-    })
+const getStationByName = async (name) => {
+    const { MetroLine } = require("../database/models");
+    try {
+        return await MetroStation.findOne({
+            where: {name: name},
+            attributes: ['id', 'name'],
+            include: [{
+                model: MetroLine,
+                as: 'line',
+                attributes: ['id', 'name']
+            }]
+        })
+    } catch (error) {
+        console.error('Error checking station existence:', error);
+        return null;
+    }
+}
+
+const getSuggestions = async (input) => {
+    if (!input || input.trim().length === 0) {
+        return [];
+    }
+
+    const sanitizedInput = removeAccents(input.trim().toLowerCase()).replace(/\s+/g, '');
+
+    console.log(`Searching for stations matching: ${sanitizedInput}`);
+    try {
+        const matchingStations = await getMatchingStation(sanitizedInput);
+        console.log(`Found ${matchingStations.length} matching stations`);
+        return matchingStations.map(station => station.name);
+    } catch (error) {
+        console.error('Error fetching station suggestions:', error);
+        return [];
+    }
+}
+
+const getMatchingStation = async (input) => {
+    return MetroStation.findAll({
+        attributes: ['name'],
+        where: {
+            name: {
+                [Op.iLike]: `%${input.trim()}%`
+            }
+        },
+        limit: 10
+    });
 }
 
 const removeAccents = (str) => {
@@ -107,4 +148,4 @@ const isAfterServiceEnd = (hour, minute) => {
            (hour === SERVICE_HOURS.START_HOUR && minute < SERVICE_HOURS.START_MINUTE);
 };
 
-module.exports = { getNextArrival, getNextArrivals, getSuggestion};
+module.exports = { getNextArrival, getNextArrivals, getStationByName, getSuggestions};
