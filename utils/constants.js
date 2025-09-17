@@ -47,7 +47,7 @@ const getMetroConfig = async () => {
 };
 
 const STATIONS_NAMES = [
-    "Châtelet",
+    "Chatelet",
     "Gare de Lyon",
     "Gare Montparnasse",
     "Gare de l'Est",
@@ -80,17 +80,17 @@ const STATIONS_NAMES = [
     "Porte de Choisy",
     "Porte d'Ivry",
     "Porte de Clignancourt",
-    "Château de Vincennes",
-    "Château Rouge",
-    "Château d'Eau",
-    "Château Landon",
-    "Château de Bagnolet",
-    "Château de la Reine",
-    "Château de Fontainebleau",
-    "Château de Sceaux",
-    "Château de Versailles",
-    "Château de Chantilly",
-    "Château de Compiègne"
+    "Chateau de Vincennes",
+    "Chateau Rouge",
+    "Chateau d'Eau",
+    "Chateau Landon",
+    "Chateau de Bagnolet",
+    "Chateau de la Reine",
+    "Chateau de Fontainebleau",
+    "Chateau de Sceaux",
+    "Chateau de Versailles",
+    "Chateau de Chantilly",
+    "Chateau de Compiègne"
 ];
 
 module.exports = {

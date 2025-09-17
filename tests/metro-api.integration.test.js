@@ -27,11 +27,11 @@ describe('Metro API Integration Tests', () => {
     it('should return metro info for existing station', async () => {
       const response = await request(app)
         .get('/metro/next-metro')
-        .query({ station: 'Châtelet' });
+        .query({ station: 'Chatelet' });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('station');
-      expect(response.body.station).toHaveProperty('name', 'Châtelet');
+      expect(response.body.station).toHaveProperty('name', 'Chatelet');
       expect(response.body.station).toHaveProperty('line');
       expect(response.body).toHaveProperty('nextArrival');
       expect(response.body).toHaveProperty('tz', 'Europe/Paris');
@@ -59,7 +59,7 @@ describe('Metro API Integration Tests', () => {
     it('should validate n parameter range', async () => {
       const response = await request(app)
         .get('/metro/next-metro')
-        .query({ station: 'Châtelet', n: '10' });
+        .query({ station: 'Chatelet', n: '10' });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ error: 'n must be between 1 and 5' });
@@ -70,7 +70,7 @@ describe('Metro API Integration Tests', () => {
     it('should return last metro info for existing station', async () => {
       const response = await request(app)
         .get('/metro/last-metro')
-        .query({ station: 'Châtelet' });
+        .query({ station: 'Chatelet' });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('station');
@@ -104,7 +104,7 @@ describe('Metro API Integration Tests', () => {
     it('should return nextArrival in HH:MM format', async () => {
       const response = await request(app)
         .get('/metro/next-metro')
-        .query({ station: 'Châtelet' });
+        .query({ station: 'Chatelet' });
 
       expect(response.status).toBe(200);
       if (response.body.service !== 'closed') {
