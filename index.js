@@ -13,11 +13,11 @@ const openapiSpecs = require("./config/openapi-specs");
 const app = express();
 
 const { initDb, seedDb } = require("./database/database");
-const { MetroLine, MetroStation } = require("./database/models");
+const { MetroLine, MetroStation, Config } = require("./database/models");
 
 initDb().then(() => {
     console.log("Database initialized");
-    seedDb(MetroLine, MetroStation).then(() => {
+    seedDb(MetroLine, MetroStation, Config).then(() => {
         console.log("Database seeded");
     }).catch(err => {
         console.error("Failed to seed database:", err);

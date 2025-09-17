@@ -14,28 +14,28 @@ const initDb = async () => {
 
 const seedDb = async (MetroLine, MetroStation, Config) => {
     const existingLines = await MetroLine.count();
-    if (existingLines > 0) {
-        return;
+    if (existingLines === 0) {
+        const metroLines = [];
+        for (let i = 1; i <= 15; i++) {
+            metroLines.push({name: `M${i}`});
+        }
+
+        await MetroLine.bulkCreate(metroLines);
+
+        const metroStations = [];
+        for (let i = 0; i < STATIONS_NAMES.length; i++) {
+            metroStations.push({name: STATIONS_NAMES[i], lineId: (i % 15) + 1});
+        }
+        await MetroStation.bulkCreate(metroStations);
+        console.log("Metro data seeded");
     }
-
-    const metroLines = [];
-    for (let i = 1; i <= 15; i++) {
-        metroLines.push({name: `M${i}`});
-    }
-
-    await MetroLine.bulkCreate(metroLines);
-
-    const metroStations = [];
-    for (let i = 0; i < STATIONS_NAMES.length; i++) {
-        metroStations.push({name: STATIONS_NAMES[i], lineId: (i % 15) + 1});
-    }
-    await MetroStation.bulkCreate(metroStations);
-
-    const configData = [];
 
     const { CONFIG_KEYS } = require('../utils/constants');
+    const existingConfig = await Config.count();
+    if (existingConfig === 0) {
+            const configData = [];
 
-    const defaults = {
+        const defaults = {
         key: CONFIG_KEYS.METRO_DEFAULTS,
         value: JSON.stringify({ line: 'M1', tz: 'Europe/Paris' })
     }
@@ -52,9 +52,9 @@ const seedDb = async (MetroLine, MetroStation, Config) => {
         value: JSON.stringify(lastMetroTimes)
     });
 
-    await Config.bulkCreate(configData);
-
-    console.log("Database seeded");
+        await Config.bulkCreate(configData);
+        console.log("Config data seeded");
+    }
 }
 
 module.exports = {sequelize, initDb, seedDb};
